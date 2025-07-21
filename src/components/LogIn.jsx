@@ -1,14 +1,39 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 const LogIn = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [token, setToken] = useState(""); // Turnstile token
+
+  const turnstileRef = useRef(null);
+
+  useEffect(() => {
+    // Load Turnstile script dynamically
+    const script = document.createElement("script");
+    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+    script.async = true;
+    document.body.appendChild(script);
+
+    // Token will be set in this callback
+    window.onTurnstileSuccess = function (token) {
+      setToken(token);
+      console.log("Turnstile Token:", token);
+    };
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    if (!token) {
+      alert("Please verify you're not a bot first.");
+      return;
+    }
+
     console.log("Username:", username);
     console.log("Password:", password);
-    alert("Login submitted! (Backend needed for real auth)");
+    console.log("Turnstile Token:", token);
+
+    alert("Login submitted! (Backend needed for real auth + Turnstile verification)");
   };
 
   return (
@@ -44,6 +69,14 @@ const LogIn = () => {
               required
             />
           </div>
+
+          {/* Cloudflare Turnstile */}
+          <div
+            className="cf-turnstile"
+            data-sitekey="0x4AAAAAABl5cLH7Yk_Dd0b5"   
+            data-callback="onTurnstileSuccess"
+            ref={turnstileRef}
+          ></div>
 
           <button
             type="submit"
